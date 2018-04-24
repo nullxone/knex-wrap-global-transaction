@@ -30,7 +30,7 @@ export default class Transaction extends EventEmitter {
     this._promise = Promise.using(this.acquireConnection(client, config, txid), (connection) => {
 
       const trxClient = this.trxClient = makeTxClient(this, client, connection)
-      const init = client.transacting ? this.savepoint(connection) : this.begin(connection)
+      const init = client.transacting || client.config.wrapGlobalTransaction ? this.savepoint(connection) : this.begin(connection)
 
       init.then(() => {
         return makeTransactor(this, connection, trxClient)
@@ -180,7 +180,7 @@ function makeTransactor(trx, connection, trxClient) {
     return transactor.transaction(container, options);
   }
 
-  if (trx.client.transacting) {
+  if (trx.client.transacting || trx.client.config.wrapGlobalTransaction) {
     transactor.commit = value => trx.release(connection, value)
     transactor.rollback = error => trx.rollbackTo(connection, error)
   } else {

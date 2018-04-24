@@ -33,6 +33,13 @@ export default function Knex(config) {
   if (typeof config.connection === 'string') {
     config = assign({}, config, {connection: parseConnection(config.connection).connection})
   }
+
+  if (config.wrapGlobalTransaction) {
+    if (!config.pool) config.pool = {}
+    config.pool.max = 1;
+    config.pool.min = 1;
+  }
+
   return makeKnex(new Dialect(config))
 }
 
